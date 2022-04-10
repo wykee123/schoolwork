@@ -1,0 +1,181 @@
+## tut1
+
+data = read.table('data01T01.dat')
+
+x = data[,1]
+y = data[,2]
+
+reg = lm(y~x+x^2+x^3)
+
+
+newx = seq(min(x), max(x), 0.1)
+pred <- predict(reg, newdata=data.frame(x=newx), interval="confidence", 
+                         level = 0.95) 
+
+plot(x, y)
+abline(reg, lwd=2)
+lines(newx, pred[,2], lty=3, col='red', lwd=2)
+lines(newx, pred[,3], lty=3, col='red', lwd=2)
+
+title(main='Estimated regression function and its 95% confidence band')
+
+## tut3
+
+datat03a1 = read.csv('dataT03a1.csv')
+
+X = data.matrix(datat03a1[,1:100])
+y = data.matrix(datat03a1[,101])
+
+X = scale(X)
+y = scale(y)
+
+par(mfrow = c(2, 2))
+
+ridge = glmnet(X, y, alpha=0)
+plot(ridge,main="ridge")
+
+lasso=glmnet(X,y,alpha=1)
+plot(lasso,main="lasso")
+
+cvridge=cv.glmnet(X, y, nfolds=5, alpha=0,standardize=TRUE)
+plot(cvridge,main="ridge cv")
+
+cvlasso=cv.glmnet(X, y, nfolds=5, alpha=1,standardize=TRUE)
+plot(cvridge,main="lasso cv")
+
+BestLambdaridge = lambda=cvridge$lambda.min
+reg1ridge = glmnet(X, y, intercept=TRUE, alpha=0, lambda=BestLambdaridge)
+
+reg1ridge$beta
+
+BestLambdalasso = lambda=cvlasso$lambda.min
+reg1lasso = glmnet(X, y, intercept=TRUE, alpha=1, lambda=BestLambdalasso)
+
+reg1lasso$beta
+
+datat03a2 = read.csv('dataT03a2.csv')
+
+Xnew = data.matrix(datat03a2[,1:100])
+ynew = data.matrix(datat03a2[,101])
+
+ypredictridge = predict(reg1ridge, newx = Xnew)
+errorridge = mean((ynew-ypredictridge)^2)
+
+ypredictlasso = predict(reg1lasso, newx = Xnew)
+errorlasso = mean((ynew-ypredictlasso)^2)
+
+errorridge
+errorlasso
+
+##
+
+datat03b1 = read.csv('dataT03b1.csv')
+
+x = data.matrix(datat03b1[,1:250])
+y = data.matrix(datat03b1[,251])
+
+library('glmnet')
+
+par(mfrow = c(1, 2))
+
+r0ridge = glmnet(x,y, family='multinomial',alpha=0)
+plot(r0ridge,main="ridge")
+
+r0lasso = glmnet(x,y, family='multinomial',alpha=1)
+plot(r0lasso,main="lasso")
+
+cvridge = cv.glmnet(x,y, family='multinomial', alpha=0, nfolds = 5)
+plot(cvridge,main="ridge cv")
+
+cvlasso = cv.glmnet(x,y, family='multinomial', alpha=1, nfolds = 5)
+plot(cvridge,main="lasso cv")
+
+lambdaridge = cvridge$lambda.min
+rridge = glmnet(x,y, family = 'multinomial', lambda=lambdaridge)
+
+lambdalasso = cvlasso$lambda.min
+rlasso = glmnet(x,y, family = 'multinomial', lambda=lambdalasso)
+
+datat03b2 = read.csv('dataT03b2.csv')
+
+xnew = data.matrix(datat03b2[,1:250])
+
+ypredictlasso = predict(rlasso, type='response',newx = xnew)
+
+par(mfrow = c(1, 3))
+plot(xnew %*% rlasso$beta$'0', ypredictlasso[1:9])
+plot(xnew %*% rlasso$beta$'1', ypredictlasso[10:18])
+plot(xnew %*% rlasso$beta$'2', ypredictlasso[19:27])
+
+ypredictlassomatrix=matrix(0,9,3)
+ypredictlassomatrix[,1]=ypredictlasso[1:9]
+ypredictlassomatrix[,2]=ypredictlasso[10:18]
+ypredictlassomatrix[,3]=ypredictlasso[19:27]
+ypredictlassomatrix
+colnames(ypredictlassomatrix)=c(0,1,2)
+
+colnames(ypredictlassomatrix)[apply(ypredictlassomatrix,1,which.max)]
+
+ypredictlasso
+colnames(ypredictlasso)[apply(ypredictlasso,1,which.max)]
+
+ss=apply(ypredictlassomatrix,1,max)
+
+## tut4
+
+xy=read.table("dataT06A.dat")
+y=xy[,1]
+x=xy[,2]
+plot(x,y)
+
+x_03=x-0.3
+x_03[x_03<=0]=0
+
+x_05=x-0.5
+x_05[x_05<=0]=0
+
+x_07=x-0.7
+x_07[x_07<=0]=0
+
+x1=x
+x2=x*x
+x3=x*x*x
+x4=x_03*x_03*x_03
+x5=x_05*x_05*x_05
+x6=x_07*x_07*x_07
+
+reg=lm(y~x1+x2+x3+x4+x5+x6)
+
+xnew = seq(0, 1, length.out=10)
+xnew_03=xnew-0.3
+xnew_03[xnew_03<=0]=0
+
+xnew_05=xnew-0.5
+xnew_05[xnew_05<=0]=0
+
+xnew_07=xnew-0.7
+xnew_07[xnew_07<=0]=0
+
+x1new=xnew
+x2new=xnew*xnew
+x3new=xnew*xnew*xnew
+x4new=xnew_03*xnew_03*xnew_03
+x5new=xnew_05*xnew_05*xnew_05
+x6new=xnew_07*xnew_07*xnew_07
+
+ypredict=predict(reg,newdata=data.frame(x1=x1new,x2=x2new,x3=x3new,x4=x4new,x5=x5new,x6=x6new))
+
+lines(xnew, ypredict, col="blue")
+
+summary(reg)
+
+reg2=lm(y~x1+x2+x3+x4+x5+x6)
+ypredict2=predict(reg2,newdata=data.frame(x1=x1new,x2=x2new,x3=x3new,x4=x4new,x5=x5new,x6=x6new),interval="confidence",level=0.95)
+lines(xnew, ypredict2[,1], col="red")
+lines(xnew, ypredict2[,2], lty=3,col="red")
+lines(xnew, ypredict2[,3], lty=3,col="red")
+
+ypredict2
+
+summary(reg2)
+
