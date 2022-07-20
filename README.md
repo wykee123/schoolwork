@@ -1,2 +1,2 @@
 # schoolwork
-collection of schoolwork
+collection of schoolwork and personal work
